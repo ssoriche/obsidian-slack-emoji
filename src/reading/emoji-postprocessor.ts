@@ -83,7 +83,7 @@ export class EmojiPostProcessor {
 
             // Add emoji or keep original text
             if (emoji) {
-                fragments.push(this.createEmojiElement(emoji));
+                fragments.push(this.createEmojiElement(emoji, shortcode));
             } else {
                 fragments.push(match[0]); // Keep original :shortcode:
             }
@@ -110,23 +110,25 @@ export class EmojiPostProcessor {
 
     /**
      * Create an HTML element for an emoji
+     * @param emoji The emoji object
+     * @param matchedShortcode The shortcode that was matched in the text (for title attribute)
      */
-    private createEmojiElement(emoji: Emoji): HTMLElement {
+    private createEmojiElement(emoji: Emoji, matchedShortcode: string): HTMLElement {
         if (emoji.type === 'unicode') {
             const span = document.createElement('span');
             span.className = 'emoji emoji-unicode';
             span.textContent = emoji.unicode;
             span.setAttribute('data-emoji', emoji.shortcode);
             span.setAttribute('aria-label', emoji.label);
-            span.setAttribute('title', `:${emoji.shortcode}:`);
+            span.setAttribute('title', `:${matchedShortcode}:`);
             return span;
         } else {
             const img = document.createElement('img');
             img.className = 'emoji emoji-custom';
             img.src = emoji.data;
-            img.alt = `:${emoji.shortcode}:`;
+            img.alt = `:${matchedShortcode}:`;
             img.setAttribute('data-emoji', emoji.shortcode);
-            img.setAttribute('title', `:${emoji.shortcode}:`);
+            img.setAttribute('title', `:${matchedShortcode}:`);
             return img;
         }
     }

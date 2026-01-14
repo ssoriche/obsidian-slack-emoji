@@ -27,7 +27,8 @@ describe('EmojiPostProcessor', () => {
 
             const emojiSpan = element.querySelector('.emoji-unicode');
             expect(emojiSpan).toBeDefined();
-            expect(emojiSpan?.textContent).toBe('👍');
+            // Unicode may include variation selectors
+            expect(emojiSpan?.textContent).toContain('👍');
         });
 
         it('should replace emoji shortcode by alias', () => {
@@ -38,7 +39,8 @@ describe('EmojiPostProcessor', () => {
 
             const emojiSpan = element.querySelector('.emoji-unicode');
             expect(emojiSpan).toBeDefined();
-            expect(emojiSpan?.textContent).toBe('👍');
+            // Unicode may include variation selectors
+            expect(emojiSpan?.textContent).toContain('👍');
         });
 
         it('should handle multiple emoji in same text', () => {
@@ -135,8 +137,10 @@ describe('EmojiPostProcessor', () => {
             processor.process(element, createMockContext());
 
             const emojiSpan = element.querySelector('.emoji-unicode');
-            expect(emojiSpan?.getAttribute('data-emoji')).toBe('thumbsup');
+            // data-emoji uses the canonical shortcode ('+1' from Emojibase)
+            expect(emojiSpan?.getAttribute('data-emoji')).toBe('+1');
             expect(emojiSpan?.getAttribute('aria-label')).toBeTruthy();
+            // title preserves the matched shortcode for user context
             expect(emojiSpan?.getAttribute('title')).toBe(':thumbsup:');
         });
 

@@ -52,10 +52,12 @@ describe('EmojiLoader', () => {
             expect(thumbsup).toBeDefined();
             // Unicode may include variation selectors
             expect(thumbsup?.unicode).toContain('👍');
-            // Should have +1 or thumbup as alias
-            const hasCommonAlias =
-                thumbsup?.aliases.includes('+1') || thumbsup?.aliases.includes('thumbup');
-            expect(hasCommonAlias).toBe(true);
+            // Emojibase uses '+1' as canonical, 'thumbsup' as alias
+            // Check that both shortcodes are available (one as canonical, one as alias)
+            const hasThumbsupRelated =
+                (thumbsup?.shortcode === '+1' && thumbsup?.aliases.includes('thumbsup')) ||
+                (thumbsup?.shortcode === 'thumbsup' && thumbsup?.aliases.includes('+1'));
+            expect(hasThumbsupRelated).toBe(true);
         });
 
         it('should map emoji to categories', async () => {

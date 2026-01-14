@@ -23,7 +23,13 @@ export class EmojiLoader {
             // Transform to our format
             this.cache = emojiData.default.map((emoji: any) => {
                 const hexcode = emoji.hexcode;
-                const shortcodes = shortcodeData.default[hexcode] || [];
+                let shortcodes = shortcodeData.default[hexcode] || [];
+
+                // Normalize to array (Emojibase uses string for single shortcode, array for multiple)
+                if (typeof shortcodes === 'string') {
+                    shortcodes = [shortcodes];
+                }
+
                 const [canonical, ...aliases] = shortcodes;
 
                 return {
