@@ -1,0 +1,38 @@
+name: Dependabot Auto-Fix
+
+on:
+    pull_request:
+        paths:
+            - 'package.json'
+
+jobs:
+    regenerate-lockfile:
+        # Only run on Dependabot PRs
+        if: github.actor == 'dependabot[bot]'
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+            pull-requests: write
+
+        steps:
+            - name: Checkout PR
+              uses: actions/checkout@v6
+              with:
+                  ref: ${{ github.head_ref }}
+                  token: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: latest
+
+            - name: Regenerate lockfile
+              run: |
+                  bun install
+                  git config --global user.name 'github-actions[bot]'
+                  git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+                  if [ -n "$(git status --porcelain bun.lockb)" ]; then
+                    git add bun.lockb
+                    git commit -m "chore: regenerate bun.lockb for dependency updates"
+                    git push
+                  fi

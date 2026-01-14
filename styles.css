@@ -1,0 +1,73 @@
+/* Emoji rendering */
+.emoji {
+    display: inline;
+    vertical-align: text-bottom;
+    line-height: 1;
+}
+
+.emoji-unicode {
+    font-size: 1.2em;
+}
+
+.emoji-custom {
+    height: 1.2em;
+    width: auto;
+    margin: 0 0.05em 0 0.1em;
+}
+
+/* Emoji suggester popup */
+.suggestion-container.emoji-suggester {
+    max-height: 400px;
+}
+
+.emoji-suggestion {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+}
+
+.emoji-preview {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+}
+
+.emoji-shortcode {
+    font-family: var(--font-monospace);
+    color: var(--text-muted);
+}
+
+.emoji-label {
+    color: var(--text-normal);
+    flex: 1;
+}
+
+/* Settings gallery */
+.emoji-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.emoji-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+}
+
+.emoji-preview-large {
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+}
+
+.emoji-actions {
+    display: flex;
+    gap: 8px;
+}

@@ -1,0 +1,19 @@
+{
+    "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/main/.schema/devbox.schema.json",
+    "packages": ["bun@latest", "jq@latest"],
+    "shell": {
+        "init_hook": [
+            "echo 'obsidian-slack-emoji dev environment ready'",
+            "echo \"Bun: $(bun --version)\"",
+            "echo \"jq: $(jq --version)\""
+        ],
+        "scripts": {
+            "dev": "bun run dev",
+            "build": "bun run build",
+            "lint": "bun run lint",
+            "format": "bun run format",
+            "test": "bun run test",
+            "test:coverage": "bun run test:coverage"
+        }
+    }
+}

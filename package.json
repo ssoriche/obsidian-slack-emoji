@@ -1,0 +1,43 @@
+{
+    "name": "obsidian-slack-emoji",
+    "version": "0.1.0",
+    "description": "Slack-style emoji for Obsidian with custom emoji support",
+    "main": "main.js",
+    "scripts": {
+        "dev": "bun run esbuild.config.mjs",
+        "build": "tsc --noEmit && bun run esbuild.config.mjs production",
+        "lint": "eslint src/",
+        "lint:fix": "eslint src/ --fix",
+        "format": "prettier --write 'src/**/*.ts'",
+        "format:check": "prettier --check 'src/**/*.ts'",
+        "typecheck": "tsc --noEmit",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "test:coverage": "vitest run --coverage"
+    },
+    "keywords": ["obsidian", "emoji", "plugin", "slack"],
+    "author": "",
+    "license": "MIT",
+    "devDependencies": {
+        "@eslint/js": "^9.17.0",
+        "@types/node": "^25.0.2",
+        "@typescript-eslint/eslint-plugin": "^8.18.1",
+        "@typescript-eslint/parser": "^8.18.1",
+        "@vitest/coverage-v8": "^4.0.15",
+        "builtin-modules": "^5.0.0",
+        "esbuild": "^0.27.1",
+        "eslint": "^9.17.0",
+        "eslint-config-prettier": "^10.1.8",
+        "obsidian": "latest",
+        "prettier": "^3.4.2",
+        "tslib": "^2.6.2",
+        "typescript": "^5.3.3",
+        "typescript-eslint": "^8.18.1",
+        "vitest": "^4.0.15"
+    },
+    "dependencies": {
+        "emojibase": "^15.3.0",
+        "emojibase-data": "^15.3.0",
+        "emojibase-regex": "^15.3.0"
+    }
+}

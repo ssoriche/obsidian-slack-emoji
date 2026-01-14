@@ -1,0 +1,10 @@
+{
+    "id": "obsidian-slack-emoji",
+    "name": "Slack Emoji",
+    "version": "0.1.0",
+    "minAppVersion": "1.5.0",
+    "description": "Slack-style emoji with custom emoji support. Use :emoji: syntax with aliases like :+1: for :thumbsup:.",
+    "author": "",
+    "authorUrl": "",
+    "isDesktopOnly": false
+}
