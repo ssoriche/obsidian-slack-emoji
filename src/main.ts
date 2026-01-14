@@ -2,12 +2,15 @@ import { Plugin } from 'obsidian';
 import type { EmojiSettings } from './types/emoji';
 import { validateSettings } from './settings';
 import { DEFAULT_SETTINGS } from './types/emoji';
+import { EmojiManager } from './emoji-manager';
+import { EmojiPostProcessor } from './reading/emoji-postprocessor';
 
 /**
  * Main plugin class for Slack-style emoji support
  */
 export default class SlackEmojiPlugin extends Plugin {
     settings: EmojiSettings = DEFAULT_SETTINGS;
+    emojiManager: EmojiManager | null = null;
 
     /**
      * Called when plugin is loaded
@@ -18,9 +21,29 @@ export default class SlackEmojiPlugin extends Plugin {
         // Load settings
         await this.loadSettings();
 
-        // TODO: Initialize emoji manager
-        // TODO: Register editor extensions
-        // TODO: Register markdown post-processor
+        // Initialize emoji manager
+        this.emojiManager = new EmojiManager();
+
+        // Load Unicode emoji if enabled
+        if (this.settings.enableUnicodeEmoji) {
+            try {
+                await this.emojiManager.loadUnicodeEmojis();
+                console.log('Unicode emoji loaded');
+            } catch (error) {
+                console.error('Failed to load Unicode emoji:', error);
+            }
+        }
+
+        // Register markdown post-processor for reading mode
+        if (this.emojiManager) {
+            const processor = new EmojiPostProcessor(this.emojiManager);
+            this.registerMarkdownPostProcessor((element, context) => {
+                processor.process(element, context);
+            });
+        }
+
+        // TODO: Load custom emoji from settings
+        // TODO: Register editor extensions for live preview
         // TODO: Add settings tab
         // TODO: Start file watcher
 
@@ -35,6 +58,8 @@ export default class SlackEmojiPlugin extends Plugin {
 
         // TODO: Clean up file watcher
         // TODO: Dispose editor extensions
+
+        this.emojiManager = null;
     }
 
     /**
