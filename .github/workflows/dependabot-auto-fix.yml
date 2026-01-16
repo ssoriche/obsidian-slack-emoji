@@ -31,8 +31,9 @@ jobs:
                   bun install
                   git config --global user.name 'github-actions[bot]'
                   git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-                  if [ -n "$(git status --porcelain bun.lockb)" ]; then
-                    git add bun.lockb
-                    git commit -m "chore: regenerate bun.lockb for dependency updates"
+                  # Check for changes to either bun.lock or bun.lockb
+                  if [ -n "$(git status --porcelain bun.lock* 2>/dev/null)" ]; then
+                    git add bun.lock*
+                    git commit -m "chore: regenerate bun lockfile for dependency updates"
                     git push
                   fi
