@@ -5,9 +5,9 @@
     "": {
       "name": "obsidian-slack-emoji",
       "dependencies": {
-        "emojibase": "^15.3.0",
-        "emojibase-data": "^15.3.0",
-        "emojibase-regex": "^15.3.0",
+        "emojibase": "^17.0.0",
+        "emojibase-data": "^17.0.0",
+        "emojibase-regex": "^17.0.0",
       },
       "devDependencies": {
         "@codemirror/language": "^6.12.1",
@@ -287,11 +287,11 @@
 
     "deep-is": ["deep-is@0.1.4", "", {}, "sha512-oIPzksmTg4/MriiaYGO+okXDT7ztn/w3Eptv/+gSIdMdKsJo0u4CfYNFJPy+4SKMuCqGw2wxnA+URMg3t8a/bQ=="],
 
-    "emojibase": ["emojibase@15.3.1", "", {}, "sha512-GNsjHnG2J3Ktg684Fs/vZR/6XpOSkZPMAv85EHrr6br2RN2cJNwdS4am/3YSK3y+/gOv2kmoK3GGdahXdMxg2g=="],
+    "emojibase": ["emojibase@17.0.0", "", {}, "sha512-bXdpf4HPY3p41zK5swVKZdC/VynsMZ4LoLxdYDE+GucqkFwzcM1GVc4ODfYAlwoKaf2U2oNNUoOO78N96ovpBA=="],
 
-    "emojibase-data": ["emojibase-data@15.3.2", "", { "peerDependencies": { "emojibase": "*" } }, "sha512-TpDyTDDTdqWIJixV5sTA6OQ0P0JfIIeK2tFRR3q56G9LK65ylAZ7z3KyBXokpvTTJ+mLUXQXbLNyVkjvnTLE+A=="],
+    "emojibase-data": ["emojibase-data@17.0.0", "", { "peerDependencies": { "emojibase": "*" } }, "sha512-Yvgb5AWoHViHV/gq1qr5ZAarcBip+B27/ZLRsUJkbgAEaLlZ/fof9g882LTpmEpyhBNEC0m2SEmItljHsTygjA=="],
 
-    "emojibase-regex": ["emojibase-regex@15.3.2", "", {}, "sha512-ue6BVeb2qu33l97MkxcOoyMJlg6Tug3eTv2z1at+M9TjvlWKvdmAPvZIDG1JbT2RH3FSyJNLucO5K5H/yxT03w=="],
+    "emojibase-regex": ["emojibase-regex@17.0.0", "", {}, "sha512-iWlqiz2l2zNf2lDqgN/7qjqKHVUX6H4D+8F5vDZkgjyWyRFXcA5K4rxkoTl7AJmyjHnoytw0m/do2SrGByui+g=="],
 
     "es-module-lexer": ["es-module-lexer@1.7.0", "", {}, "sha512-jEQoCwk8hyb2AZziIOLhDqpm5+2ww5uIE6lkO/6jcOCusfk6LhMHpXXfBLXTZ7Ydyt0j4VoUQv6uGNYbdW+kBA=="],
 
