@@ -6,9 +6,9 @@ import { EmojiLoader } from './data/emoji-loader';
  * Provides fast lookup by shortcode with alias resolution
  */
 export class EmojiManager {
-    private unicodeEmojis: Map<string, UnicodeEmoji> = new Map();
-    private customEmojis: Map<string, CustomEmoji> = new Map();
-    private aliasIndex: Map<string, string> = new Map(); // alias -> canonical shortcode
+    private unicodeEmojis = new Map<string, UnicodeEmoji>();
+    private customEmojis = new Map<string, CustomEmoji>();
+    private aliasIndex = new Map<string, string>(); // alias -> canonical shortcode
     private loader: EmojiLoader;
 
     constructor() {
@@ -34,7 +34,7 @@ export class EmojiManager {
         }
 
         console.log(
-            `Loaded ${this.unicodeEmojis.size} Unicode emoji with ${this.aliasIndex.size} aliases`
+            `Loaded ${String(this.unicodeEmojis.size)} Unicode emoji with ${String(this.aliasIndex.size)} aliases`
         );
     }
 
@@ -92,12 +92,13 @@ export class EmojiManager {
      * This is the main lookup method - handles alias resolution transparently
      */
     findByShortcode(shortcode: string): Emoji | null {
-        // First check if it's a canonical shortcode
-        let emoji = this.customEmojis.get(shortcode);
-        if (emoji) return emoji;
+        // First check if it's a canonical shortcode in custom emoji
+        const customEmoji = this.customEmojis.get(shortcode);
+        if (customEmoji) return customEmoji;
 
-        emoji = this.unicodeEmojis.get(shortcode);
-        if (emoji) return emoji;
+        // Then check Unicode emoji
+        const unicodeEmoji = this.unicodeEmojis.get(shortcode);
+        if (unicodeEmoji) return unicodeEmoji;
 
         // Check if it's an alias
         const canonical = this.aliasIndex.get(shortcode);
@@ -112,7 +113,7 @@ export class EmojiManager {
      * Search emoji by query (matches shortcode, aliases, or label)
      * Used for autocomplete
      */
-    searchEmojis(query: string, limit: number = 50): Emoji[] {
+    searchEmojis(query: string, limit = 50): Emoji[] {
         const lowerQuery = query.toLowerCase();
         const results: Emoji[] = [];
 

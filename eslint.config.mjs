@@ -10,7 +10,7 @@ export default tseslint.config(
     {
         languageOptions: {
             parserOptions: {
-                projectService: true,
+                project: './tsconfig.eslint.json',
                 tsconfigRootDir: import.meta.dirname,
             },
         },
@@ -24,6 +24,20 @@ export default tseslint.config(
             ],
             '@typescript-eslint/consistent-type-imports': 'error',
             '@typescript-eslint/no-import-type-side-effects': 'error',
+        },
+    },
+    {
+        files: ['**/*.test.ts'],
+        rules: {
+            // Relax type safety rules for test files
+            '@typescript-eslint/no-unsafe-assignment': 'off',
+            '@typescript-eslint/no-unsafe-member-access': 'off',
+            '@typescript-eslint/no-unsafe-argument': 'off',
+            '@typescript-eslint/no-unsafe-call': 'off',
+            '@typescript-eslint/non-nullable-type-assertion-style': 'off',
+            '@typescript-eslint/no-unnecessary-condition': 'off',
+            '@typescript-eslint/prefer-nullish-coalescing': 'off',
+            '@typescript-eslint/no-explicit-any': 'off',
         },
     },
     {

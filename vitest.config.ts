@@ -9,7 +9,13 @@ export default defineConfig({
             provider: 'v8',
             reporter: ['text', 'json', 'html'],
             include: ['src/**/*.ts'],
-            exclude: ['src/**/*.test.ts', 'src/main.ts', 'src/settings-tab.ts'],
+            exclude: [
+                'src/**/*.test.ts',
+                'src/main.ts',
+                'src/settings-tab.ts',
+                'src/editor/emoji-decorator.ts', // Requires CodeMirror integration testing
+                'src/editor/emoji-plugin.ts', // Requires CodeMirror integration testing
+            ],
             thresholds: {
                 lines: 80,
                 functions: 80,

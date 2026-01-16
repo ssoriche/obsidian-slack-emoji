@@ -4,6 +4,7 @@ import { validateSettings } from './settings';
 import { DEFAULT_SETTINGS } from './types/emoji';
 import { EmojiManager } from './emoji-manager';
 import { EmojiPostProcessor } from './reading/emoji-postprocessor';
+import { createEmojiEditorPlugin } from './editor/emoji-plugin';
 
 /**
  * Main plugin class for Slack-style emoji support
@@ -35,15 +36,15 @@ export default class SlackEmojiPlugin extends Plugin {
         }
 
         // Register markdown post-processor for reading mode
-        if (this.emojiManager) {
-            const processor = new EmojiPostProcessor(this.emojiManager);
-            this.registerMarkdownPostProcessor((element, context) => {
-                processor.process(element, context);
-            });
-        }
+        const processor = new EmojiPostProcessor(this.emojiManager);
+        this.registerMarkdownPostProcessor((element, context) => {
+            processor.process(element, context);
+        });
+
+        // Register editor extension for live preview
+        this.registerEditorExtension(createEmojiEditorPlugin(this.emojiManager));
 
         // TODO: Load custom emoji from settings
-        // TODO: Register editor extensions for live preview
         // TODO: Add settings tab
         // TODO: Start file watcher
 
@@ -57,7 +58,7 @@ export default class SlackEmojiPlugin extends Plugin {
         console.log('Unloading Slack Emoji plugin');
 
         // TODO: Clean up file watcher
-        // TODO: Dispose editor extensions
+        // Editor extensions are automatically disposed by Obsidian
 
         this.emojiManager = null;
     }

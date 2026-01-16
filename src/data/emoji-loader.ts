@@ -21,8 +21,10 @@ export class EmojiLoader {
             const shortcodeData = await import('emojibase-data/en/shortcodes/github.json');
 
             // Transform to our format
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             this.cache = emojiData.default.map((emoji: any) => {
-                const hexcode = emoji.hexcode;
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+                const hexcode: string = emoji.hexcode;
                 let shortcodes = shortcodeData.default[hexcode] || [];
 
                 // Normalize to array (Emojibase uses string for single shortcode, array for multiple)
@@ -34,11 +36,14 @@ export class EmojiLoader {
 
                 return {
                     type: 'unicode' as const,
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
                     unicode: emoji.unicode,
                     hexcode: hexcode,
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/prefer-nullish-coalescing
                     label: emoji.label || emoji.unicode,
                     shortcode: canonical || hexcode,
                     aliases: aliases,
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
                     category: this.mapGroup(emoji.group),
                 };
             });

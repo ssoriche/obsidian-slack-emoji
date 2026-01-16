@@ -23,7 +23,7 @@ export class EmojiPostProcessor {
         // Walk through all text nodes
         const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
 
-        const nodesToProcess: Array<{ node: Text; matches: RegExpMatchArray[] }> = [];
+        const nodesToProcess: { node: Text; matches: RegExpMatchArray[] }[] = [];
 
         let node: Node | null;
         while ((node = walker.nextNode())) {
@@ -34,7 +34,8 @@ export class EmojiPostProcessor {
                 continue;
             }
 
-            const matches = Array.from(textNode.textContent?.matchAll(this.shortcodePattern) ?? []);
+            // Text nodes always have non-null textContent
+            const matches = Array.from(textNode.textContent.matchAll(this.shortcodePattern));
             if (matches.length > 0) {
                 nodesToProcess.push({ node: textNode, matches });
             }
@@ -67,8 +68,9 @@ export class EmojiPostProcessor {
         const parent = node.parentElement;
         if (!parent) return;
 
-        const text = node.textContent ?? '';
-        const fragments: Array<string | HTMLElement> = [];
+        // Text nodes always have non-null textContent
+        const text = node.textContent;
+        const fragments: (string | HTMLElement)[] = [];
         let lastIndex = 0;
 
         for (const match of matches) {
