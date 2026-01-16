@@ -9,7 +9,10 @@ class EmojiEditorPlugin {
     decorations: DecorationSet;
     private decorator: EmojiDecorator;
 
-    constructor(view: EditorView, private emojiManager: EmojiManager) {
+    constructor(
+        view: EditorView,
+        private emojiManager: EmojiManager
+    ) {
         this.decorator = new EmojiDecorator(emojiManager);
         this.decorations = this.decorator.buildDecorations(view);
     }

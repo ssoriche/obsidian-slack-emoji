@@ -50,10 +50,7 @@ describe('EmojiManager', () => {
     });
 
     describe('custom emoji management', () => {
-        const createCustomEmoji = (
-            shortcode: string,
-            aliases: string[] = []
-        ): CustomEmoji => ({
+        const createCustomEmoji = (shortcode: string, aliases: string[] = []): CustomEmoji => ({
             type: 'custom',
             shortcode,
             filename: `${shortcode}.png`,

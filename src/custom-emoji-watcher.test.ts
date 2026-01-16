@@ -143,10 +143,7 @@ describe('CustomEmojiWatcher', () => {
         });
 
         it('should replace spaces with underscores in shortcodes', async () => {
-            const file = createMockFile(
-                '.obsidian/emoji/my emoji.png',
-                'my emoji.png'
-            );
+            const file = createMockFile('.obsidian/emoji/my emoji.png', 'my emoji.png');
             (mockVault.getFiles as ReturnType<typeof vi.fn>).mockReturnValue([file]);
             (mockVault.readBinary as ReturnType<typeof vi.fn>).mockResolvedValue(
                 new ArrayBuffer(8)
@@ -159,10 +156,7 @@ describe('CustomEmojiWatcher', () => {
         });
 
         it('should replace special characters with underscores', async () => {
-            const file = createMockFile(
-                '.obsidian/emoji/emoji@#$.png',
-                'emoji@#$.png'
-            );
+            const file = createMockFile('.obsidian/emoji/emoji@#$.png', 'emoji@#$.png');
             (mockVault.getFiles as ReturnType<typeof vi.fn>).mockReturnValue([file]);
             (mockVault.readBinary as ReturnType<typeof vi.fn>).mockResolvedValue(
                 new ArrayBuffer(8)

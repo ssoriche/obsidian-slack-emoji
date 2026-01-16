@@ -1,5 +1,12 @@
 import { EditorSuggest } from 'obsidian';
-import type { App, Editor, EditorPosition, EditorSuggestContext, EditorSuggestTriggerInfo, TFile } from 'obsidian';
+import type {
+    App,
+    Editor,
+    EditorPosition,
+    EditorSuggestContext,
+    EditorSuggestTriggerInfo,
+    TFile,
+} from 'obsidian';
 import type { EmojiManager } from '../emoji-manager';
 import type { Emoji } from '../types/emoji';
 
@@ -21,7 +28,11 @@ export class EmojiSuggester extends EditorSuggest<Emoji> {
      * Detect when to trigger suggestions
      * Triggers when user types : followed by at least minChars characters
      */
-    onTrigger(cursor: EditorPosition, editor: Editor, _file: TFile | null): EditorSuggestTriggerInfo | null {
+    onTrigger(
+        cursor: EditorPosition,
+        editor: Editor,
+        _file: TFile | null
+    ): EditorSuggestTriggerInfo | null {
         // Get text from start of line to cursor
         const line = editor.getLine(cursor.line);
         const textBeforeCursor = line.substring(0, cursor.ch);

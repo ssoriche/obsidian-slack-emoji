@@ -89,7 +89,9 @@ export class SlackEmojiSettingTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName('Custom emoji folder')
-            .setDesc('Vault folder containing custom emoji images (will be created if it doesn\'t exist)')
+            .setDesc(
+                "Vault folder containing custom emoji images (will be created if it doesn't exist)"
+            )
             .addText((text) =>
                 text
                     .setPlaceholder('.obsidian/emoji')
@@ -176,7 +178,8 @@ export class SlackEmojiSettingTab extends PluginSettingTab {
 
         // Filename
         const filenameEl = card.createEl('div');
-        filenameEl.style.cssText = 'font-size: 0.8em; color: var(--text-muted); text-align: center;';
+        filenameEl.style.cssText =
+            'font-size: 0.8em; color: var(--text-muted); text-align: center;';
         filenameEl.textContent = metadata.filename;
 
         // Aliases
