@@ -6,6 +6,7 @@ import { EmojiManager } from './emoji-manager';
 import { EmojiPostProcessor } from './reading/emoji-postprocessor';
 import { createEmojiEditorPlugin } from './editor/emoji-plugin';
 import { CustomEmojiWatcher } from './custom-emoji-watcher';
+import { SlackEmojiSettingTab } from './settings-tab';
 
 /**
  * Main plugin class for Slack-style emoji support
@@ -68,7 +69,8 @@ export default class SlackEmojiPlugin extends Plugin {
             }
         }
 
-        // TODO: Add settings tab
+        // Add settings tab
+        this.addSettingTab(new SlackEmojiSettingTab(this.app, this));
 
         console.log('Slack Emoji plugin loaded');
     }
