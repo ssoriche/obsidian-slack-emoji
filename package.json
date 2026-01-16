@@ -40,8 +40,8 @@
         "vitest": "^4.0.15"
     },
     "dependencies": {
-        "emojibase": "^15.3.0",
-        "emojibase-data": "^15.3.0",
-        "emojibase-regex": "^15.3.0"
+        "emojibase": "^17.0.0",
+        "emojibase-data": "^17.0.0",
+        "emojibase-regex": "^17.0.0"
     }
 }
