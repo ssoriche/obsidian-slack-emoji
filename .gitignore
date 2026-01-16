@@ -28,7 +28,7 @@ Thumbs.db
 *~
 
 # Bun
-bun.lockb
+# Note: bun.lock/bun.lockb should be committed to ensure reproducible builds
 
 # Temporary files
 *.tmp
