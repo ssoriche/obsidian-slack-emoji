@@ -7,6 +7,7 @@ import { EmojiPostProcessor } from './reading/emoji-postprocessor';
 import { createEmojiEditorPlugin } from './editor/emoji-plugin';
 import { CustomEmojiWatcher } from './custom-emoji-watcher';
 import { SlackEmojiSettingTab } from './settings-tab';
+import { EmojiSuggester } from './editor/emoji-suggester';
 
 /**
  * Main plugin class for Slack-style emoji support
@@ -15,6 +16,7 @@ export default class SlackEmojiPlugin extends Plugin {
     settings: EmojiSettings = DEFAULT_SETTINGS;
     emojiManager: EmojiManager | null = null;
     emojiWatcher: CustomEmojiWatcher | null = null;
+    emojiSuggester: EmojiSuggester | null = null;
 
     /**
      * Called when plugin is loaded
@@ -69,6 +71,17 @@ export default class SlackEmojiPlugin extends Plugin {
             }
         }
 
+        // Register autocomplete suggester
+        if (this.settings.enableAutocomplete) {
+            this.emojiSuggester = new EmojiSuggester(
+                this.app,
+                this.emojiManager,
+                this.settings.autocompleteMinChars
+            );
+            this.registerEditorSuggest(this.emojiSuggester);
+            console.log('Emoji autocomplete suggester registered');
+        }
+
         // Add settings tab
         this.addSettingTab(new SlackEmojiSettingTab(this.app, this));
 
@@ -87,8 +100,9 @@ export default class SlackEmojiPlugin extends Plugin {
             this.emojiWatcher = null;
         }
 
-        // Editor extensions are automatically disposed by Obsidian
+        // Editor extensions and suggesters are automatically disposed by Obsidian
 
+        this.emojiSuggester = null;
         this.emojiManager = null;
     }
 
