@@ -15,6 +15,7 @@ export default defineConfig({
                 'src/settings-tab.ts',
                 'src/editor/emoji-decorator.ts', // Requires CodeMirror integration testing
                 'src/editor/emoji-plugin.ts', // Requires CodeMirror integration testing
+                'src/custom-emoji-watcher.ts', // Vault event handlers require Obsidian integration testing
             ],
             thresholds: {
                 lines: 80,

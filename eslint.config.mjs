@@ -38,6 +38,8 @@ export default tseslint.config(
             '@typescript-eslint/no-unnecessary-condition': 'off',
             '@typescript-eslint/prefer-nullish-coalescing': 'off',
             '@typescript-eslint/no-explicit-any': 'off',
+            '@typescript-eslint/unbound-method': 'off',
+            '@typescript-eslint/require-await': 'off',
         },
     },
     {

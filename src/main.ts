@@ -5,6 +5,7 @@ import { DEFAULT_SETTINGS } from './types/emoji';
 import { EmojiManager } from './emoji-manager';
 import { EmojiPostProcessor } from './reading/emoji-postprocessor';
 import { createEmojiEditorPlugin } from './editor/emoji-plugin';
+import { CustomEmojiWatcher } from './custom-emoji-watcher';
 
 /**
  * Main plugin class for Slack-style emoji support
@@ -12,6 +13,7 @@ import { createEmojiEditorPlugin } from './editor/emoji-plugin';
 export default class SlackEmojiPlugin extends Plugin {
     settings: EmojiSettings = DEFAULT_SETTINGS;
     emojiManager: EmojiManager | null = null;
+    emojiWatcher: CustomEmojiWatcher | null = null;
 
     /**
      * Called when plugin is loaded
@@ -44,9 +46,29 @@ export default class SlackEmojiPlugin extends Plugin {
         // Register editor extension for live preview
         this.registerEditorExtension(createEmojiEditorPlugin(this.emojiManager));
 
-        // TODO: Load custom emoji from settings
+        // Load custom emoji from settings
+        if (this.settings.enableCustomEmoji) {
+            this.loadCustomEmojisFromSettings();
+        }
+
+        // Start file watcher for custom emoji
+        if (this.settings.enableCustomEmoji) {
+            try {
+                this.emojiWatcher = new CustomEmojiWatcher(
+                    this.app.vault,
+                    this.emojiManager,
+                    this.settings.customEmojiFolder
+                );
+                await this.emojiWatcher.start();
+                console.log(
+                    `Custom emoji watcher started for folder: ${this.settings.customEmojiFolder}`
+                );
+            } catch (error) {
+                console.error('Failed to start custom emoji watcher:', error);
+            }
+        }
+
         // TODO: Add settings tab
-        // TODO: Start file watcher
 
         console.log('Slack Emoji plugin loaded');
     }
@@ -57,10 +79,33 @@ export default class SlackEmojiPlugin extends Plugin {
     onunload(): void {
         console.log('Unloading Slack Emoji plugin');
 
-        // TODO: Clean up file watcher
+        // Clean up file watcher
+        if (this.emojiWatcher) {
+            this.emojiWatcher.stop();
+            this.emojiWatcher = null;
+        }
+
         // Editor extensions are automatically disposed by Obsidian
 
         this.emojiManager = null;
+    }
+
+    /**
+     * Load custom emoji aliases from settings
+     * The watcher loads the images, this just adds the alias information
+     */
+    private loadCustomEmojisFromSettings(): void {
+        if (!this.emojiManager) return;
+
+        for (const metadata of this.settings.customEmojis) {
+            const emoji = this.emojiManager.findByShortcode(metadata.shortcode);
+            if (emoji?.type === 'custom') {
+                // Update with aliases from settings
+                this.emojiManager.updateCustomEmoji(metadata.shortcode, {
+                    aliases: metadata.aliases,
+                });
+            }
+        }
     }
 
     /**
