@@ -33,3 +33,6 @@ bun.lockb
 # Temporary files
 *.tmp
 .env
+
+# Local settings
+.claude/
