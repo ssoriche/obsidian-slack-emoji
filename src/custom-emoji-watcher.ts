@@ -78,10 +78,28 @@ export class CustomEmojiWatcher {
      * Load all existing emoji from the folder
      */
     private async loadExistingEmoji(): Promise<void> {
-        const files = this.vault.getFiles().filter((file) => this.isEmojiFile(file));
+        // First try vault.getFiles() for normal folders
+        const vaultFiles = this.vault.getFiles().filter((file) => this.isEmojiFile(file));
 
-        for (const file of files) {
-            await this.addEmojiFromFile(file);
+        if (vaultFiles.length > 0) {
+            for (const file of vaultFiles) {
+                await this.addEmojiFromFile(file);
+            }
+            return;
+        }
+
+        // Fall back to adapter for hidden folders like .obsidian/
+        const folderExists = await this.vault.adapter.exists(this.folderPath);
+        if (!folderExists) {
+            return;
+        }
+
+        const listing = await this.vault.adapter.list(this.folderPath);
+        for (const filePath of listing.files) {
+            const ext = filePath.split('.').pop()?.toLowerCase() ?? '';
+            if (this.imageExtensions.includes(`.${ext}`)) {
+                await this.addEmojiFromPath(filePath);
+            }
         }
     }
 
@@ -106,7 +124,7 @@ export class CustomEmojiWatcher {
     }
 
     /**
-     * Add emoji from a file
+     * Add emoji from a TFile
      */
     private async addEmojiFromFile(file: TFile): Promise<void> {
         try {
@@ -131,6 +149,38 @@ export class CustomEmojiWatcher {
             this.emojiManager.addCustomEmoji(emoji);
         } catch (error) {
             console.error(`Failed to load emoji from ${file.path}:`, error);
+        }
+    }
+
+    /**
+     * Add emoji from a file path (for hidden folders accessed via adapter)
+     */
+    private async addEmojiFromPath(filePath: string): Promise<void> {
+        try {
+            const filename = filePath.split('/').pop() ?? '';
+            const ext = filename.split('.').pop() ?? '';
+
+            // Read the file as base64 data URL
+            const arrayBuffer = await this.vault.adapter.readBinary(filePath);
+            const mimeType = this.getMimeType(ext);
+            const blob = new Blob([arrayBuffer], { type: mimeType });
+            const dataUrl = await this.blobToDataUrl(blob);
+
+            const shortcode = this.filenameToShortcode(filename);
+
+            const emoji: CustomEmoji = {
+                type: 'custom',
+                shortcode,
+                filename,
+                filepath: filePath,
+                data: dataUrl,
+                aliases: [],
+                addedDate: Date.now(),
+            };
+
+            this.emojiManager.addCustomEmoji(emoji);
+        } catch (error) {
+            console.error(`Failed to load emoji from ${filePath}:`, error);
         }
     }
 
