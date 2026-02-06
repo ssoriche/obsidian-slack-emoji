@@ -35,6 +35,11 @@ describe('CustomEmojiWatcher', () => {
                 callback,
             })),
             offref: vi.fn(),
+            adapter: {
+                exists: vi.fn(async () => false),
+                list: vi.fn(async () => ({ files: [], folders: [] })),
+                readBinary: vi.fn(async () => new ArrayBuffer(8)),
+            },
         } as unknown as Vault;
 
         watcher = new CustomEmojiWatcher(mockVault, manager, '.obsidian/emoji');
