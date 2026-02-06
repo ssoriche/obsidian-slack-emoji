@@ -112,7 +112,8 @@ export class CustomEmojiWatcher {
         try {
             // Read the file as base64 data URL
             const arrayBuffer = await this.vault.readBinary(file);
-            const blob = new Blob([arrayBuffer]);
+            const mimeType = this.getMimeType(file.extension);
+            const blob = new Blob([arrayBuffer], { type: mimeType });
             const dataUrl = await this.blobToDataUrl(blob);
 
             const shortcode = this.filenameToShortcode(file.name);
@@ -131,6 +132,21 @@ export class CustomEmojiWatcher {
         } catch (error) {
             console.error(`Failed to load emoji from ${file.path}:`, error);
         }
+    }
+
+    /**
+     * Get MIME type from file extension
+     */
+    private getMimeType(extension: string): string {
+        const mimeTypes: Record<string, string> = {
+            png: 'image/png',
+            jpg: 'image/jpeg',
+            jpeg: 'image/jpeg',
+            gif: 'image/gif',
+            svg: 'image/svg+xml',
+            webp: 'image/webp',
+        };
+        return mimeTypes[extension.toLowerCase()] ?? 'application/octet-stream';
     }
 
     /**
