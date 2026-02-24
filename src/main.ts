@@ -1,6 +1,6 @@
 import { Plugin } from 'obsidian';
 import type { EmojiSettings } from './types/emoji';
-import { validateSettings } from './settings';
+import { validateSettings, findMissingMetadata } from './settings';
 import { DEFAULT_SETTINGS } from './types/emoji';
 import { EmojiManager } from './emoji-manager';
 import { EmojiPostProcessor } from './reading/emoji-postprocessor';
@@ -49,12 +49,7 @@ export default class SlackEmojiPlugin extends Plugin {
         // Register editor extension for live preview
         this.registerEditorExtension(createEmojiEditorPlugin(this.emojiManager));
 
-        // Load custom emoji from settings
-        if (this.settings.enableCustomEmoji) {
-            this.loadCustomEmojisFromSettings();
-        }
-
-        // Start file watcher for custom emoji
+        // Start file watcher for custom emoji (loads files from disk)
         if (this.settings.enableCustomEmoji) {
             try {
                 this.emojiWatcher = new CustomEmojiWatcher(
@@ -69,6 +64,12 @@ export default class SlackEmojiPlugin extends Plugin {
             } catch (error) {
                 console.error('Failed to start custom emoji watcher:', error);
             }
+
+            // Sync metadata for any on-disk emoji missing from settings
+            await this.syncCustomEmojiMetadata();
+
+            // Apply saved aliases from settings
+            this.loadCustomEmojisFromSettings();
         }
 
         // Register autocomplete suggester
@@ -104,6 +105,22 @@ export default class SlackEmojiPlugin extends Plugin {
 
         this.emojiSuggester = null;
         this.emojiManager = null;
+    }
+
+    /**
+     * Sync metadata for on-disk custom emoji that are missing from settings.
+     * Called after watcher startup and watcher restart from settings tab.
+     */
+    async syncCustomEmojiMetadata(): Promise<void> {
+        if (!this.emojiManager) return;
+        const missing = findMissingMetadata(
+            this.emojiManager.getCustomEmojis(),
+            this.settings.customEmojis
+        );
+        if (missing.length > 0) {
+            this.settings.customEmojis.push(...missing);
+            await this.saveSettings();
+        }
     }
 
     /**

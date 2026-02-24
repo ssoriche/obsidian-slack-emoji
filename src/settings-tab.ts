@@ -152,6 +152,12 @@ export class SlackEmojiSettingTab extends PluginSettingTab {
                 <li>Spaces and special characters in filenames are converted to underscores</li>
                 <li>Add aliases to make emoji easier to find</li>
             </ul>
+            <p><strong>Managing aliases:</strong></p>
+            <ul>
+                <li>Custom emoji aliases can be edited using the <strong>Edit Aliases</strong> button on each emoji card above</li>
+                <li>Enter multiple aliases separated by commas (e.g., <code>logo, brand, company</code>)</li>
+                <li>Unicode emoji aliases are provided by Emojibase and cannot be customized</li>
+            </ul>
         `;
     }
 
@@ -242,13 +248,23 @@ export class SlackEmojiSettingTab extends PluginSettingTab {
                 const filePath = `${folderPath}/${file.name}`;
 
                 // Create folder if it doesn't exist
-                const folder = this.app.vault.getAbstractFileByPath(folderPath);
-                if (!folder) {
-                    await this.app.vault.createFolder(folderPath);
+                const folderExists = await this.app.vault.adapter.exists(folderPath);
+                if (!folderExists) {
+                    await this.app.vault.adapter.mkdir(folderPath);
                 }
 
                 // Write file to vault
                 await this.app.vault.createBinary(filePath, arrayBuffer);
+
+                // Save metadata for gallery display
+                const metadata: CustomEmojiMetadata = {
+                    shortcode,
+                    filename: file.name,
+                    aliases: [],
+                    addedDate: Date.now(),
+                };
+                this.plugin.settings.customEmojis.push(metadata);
+                await this.plugin.saveSettings();
 
                 new Notice(`Custom emoji :${shortcode}: uploaded successfully!`);
 
@@ -438,6 +454,7 @@ export class SlackEmojiSettingTab extends PluginSettingTab {
                 this.plugin.settings.customEmojiFolder
             );
             await this.plugin.emojiWatcher.start();
+            await this.plugin.syncCustomEmojiMetadata();
             new Notice('Custom emoji watcher restarted');
         }
     }
