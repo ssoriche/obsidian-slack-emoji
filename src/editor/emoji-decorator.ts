@@ -48,8 +48,13 @@ export class EmojiDecorator {
                     return false;
                 }
 
-                // Only process text nodes
-                if (node.name !== 'Document' && !this.isTextNode(node.name)) {
+                // Descend into Document without processing its text
+                if (node.name === 'Document') {
+                    return true;
+                }
+
+                // Skip non-text nodes but descend into their children
+                if (!this.isTextNode(node.name)) {
                     return true;
                 }
 
@@ -60,8 +65,6 @@ export class EmojiDecorator {
                 const matches = Array.from(text.matchAll(EMOJI_PATTERN));
 
                 for (const match of matches) {
-                    if (!match.index) continue;
-
                     const shortcode = match[1];
                     const emoji = this.emojiManager.findByShortcode(shortcode);
 
@@ -103,7 +106,6 @@ export class EmojiDecorator {
     private isTextNode(nodeName: string): boolean {
         // These are typical markdown text-containing nodes in CodeMirror
         return (
-            nodeName === 'Document' ||
             nodeName.includes('inline') ||
             nodeName.includes('text') ||
             nodeName.includes('Text') ||
