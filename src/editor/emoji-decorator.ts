@@ -29,7 +29,12 @@ export class EmojiDecorator {
     }
 
     /**
-     * Decorate a specific range of the document
+     * Decorate a specific range of the document.
+     *
+     * Processes the full visible text directly and uses the syntax tree
+     * only to find regions to skip (code blocks, inline code, escapes).
+     * This avoids dependence on node names for text matching and produces
+     * decorations in natural document order (no sorting crash).
      */
     private decorateRange(
         view: EditorView,
@@ -39,53 +44,44 @@ export class EmojiDecorator {
     ): void {
         const tree = syntaxTree(view.state);
 
+        // Collect ranges to skip (code blocks, inline code, escapes)
+        const skipRanges: { from: number; to: number }[] = [];
         tree.iterate({
             from,
             to,
             enter: (node) => {
-                // Skip code blocks and inline code
                 if (this.shouldSkipNode(node.name)) {
+                    skipRanges.push({ from: node.from, to: node.to });
                     return false;
                 }
-
-                // Descend into Document without processing its text
-                if (node.name === 'Document') {
-                    return true;
-                }
-
-                // Skip non-text nodes but descend into their children
-                if (!this.isTextNode(node.name)) {
-                    return true;
-                }
-
-                // Get the text content of this node
-                const text = view.state.doc.sliceString(node.from, node.to);
-
-                // Find all emoji patterns in this text
-                const matches = Array.from(text.matchAll(EMOJI_PATTERN));
-
-                for (const match of matches) {
-                    const shortcode = match[1];
-                    const emoji = this.emojiManager.findByShortcode(shortcode);
-
-                    if (emoji) {
-                        const start = node.from + match.index;
-                        const end = start + match[0].length;
-
-                        // Create a widget decoration to replace the :shortcode:
-                        const widget = new EmojiWidget(emoji, shortcode);
-                        const deco = Decoration.replace({
-                            widget,
-                            inclusive: false,
-                        });
-
-                        builder.add(start, end, deco);
-                    }
-                }
-
-                return true;
             },
         });
+
+        // Process the full visible text
+        const text = view.state.doc.sliceString(from, to);
+        const matches = text.matchAll(EMOJI_PATTERN);
+
+        for (const match of matches) {
+            const start = from + match.index;
+            const end = start + match[0].length;
+
+            // Skip matches inside code/escape ranges
+            if (skipRanges.some((r) => start >= r.from && end <= r.to)) {
+                continue;
+            }
+
+            const shortcode = match[1];
+            const emoji = this.emojiManager.findByShortcode(shortcode);
+
+            if (emoji) {
+                const widget = new EmojiWidget(emoji, shortcode);
+                const deco = Decoration.replace({
+                    widget,
+                    inclusive: false,
+                });
+                builder.add(start, end, deco);
+            }
+        }
     }
 
     /**
@@ -97,22 +93,6 @@ export class EmojiDecorator {
             nodeName.includes('Code') ||
             nodeName.includes('formatting') ||
             nodeName.includes('escape')
-        );
-    }
-
-    /**
-     * Check if a node is a text-containing node
-     */
-    private isTextNode(nodeName: string): boolean {
-        // These are typical markdown text-containing nodes in CodeMirror
-        return (
-            nodeName.includes('inline') ||
-            nodeName.includes('text') ||
-            nodeName.includes('Text') ||
-            nodeName.includes('paragraph') ||
-            nodeName.includes('Paragraph') ||
-            nodeName.includes('heading') ||
-            nodeName.includes('Heading')
         );
     }
 }
