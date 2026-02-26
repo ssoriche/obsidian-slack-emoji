@@ -36,3 +36,6 @@ Thumbs.db
 
 # Local settings
 .claude/
+
+# Test vault
+test-vault/
