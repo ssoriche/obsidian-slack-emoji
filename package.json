@@ -1,6 +1,6 @@
 {
   "name": "obsidian-slack-emoji",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Slack-style emoji for Obsidian with custom emoji support",
   "main": "main.js",
   "scripts": {
