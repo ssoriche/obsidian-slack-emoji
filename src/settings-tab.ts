@@ -197,19 +197,20 @@ export class SlackEmojiSettingTab extends PluginSettingTab {
 
         // Action buttons
         const actions = card.createDiv('emoji-actions');
-        actions.style.cssText = 'margin-top: 0.5rem;';
 
         // Edit aliases button
-        const editBtn = actions.createEl('button', { text: 'Edit Aliases' });
-        editBtn.style.cssText = 'flex: 1; padding: 0.25rem 0.5rem; font-size: 0.9em;';
+        const editBtn = actions.createEl('button', { text: '✏️' });
+        editBtn.setAttribute('aria-label', 'Edit aliases');
+        editBtn.style.cssText = 'padding: 0.25rem 0.5rem; font-size: 1em; cursor: pointer;';
         editBtn.onclick = () => {
             this.showEditAliasesDialog(metadata);
         };
 
         // Delete button
-        const deleteBtn = actions.createEl('button', { text: 'Delete' });
+        const deleteBtn = actions.createEl('button', { text: '🗑️' });
+        deleteBtn.setAttribute('aria-label', 'Delete emoji');
         deleteBtn.style.cssText =
-            'flex: 1; padding: 0.25rem 0.5rem; font-size: 0.9em; background-color: var(--background-modifier-error); color: var(--text-on-accent);';
+            'padding: 0.25rem 0.5rem; font-size: 1em; cursor: pointer; background-color: var(--background-modifier-error); color: var(--text-on-accent);';
         deleteBtn.onclick = async () => {
             await this.deleteCustomEmoji(metadata.shortcode);
         };
