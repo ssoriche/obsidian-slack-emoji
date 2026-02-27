@@ -218,7 +218,7 @@ export class CustomEmojiWatcher {
      */
     private async onFileCreated(file: TFile): Promise<void> {
         if (this.isEmojiFile(file)) {
-            await this.addEmojiFromFile(file);
+            await this.addEmojiFromPath(file.path);
         }
     }
 
@@ -246,13 +246,13 @@ export class CustomEmojiWatcher {
             this.emojiManager.removeCustomEmoji(oldShortcode);
         } else if (!wasEmojiFile && isEmojiFile) {
             // File moved into emoji folder
-            await this.addEmojiFromFile(file);
+            await this.addEmojiFromPath(file.path);
         } else if (wasEmojiFile && isEmojiFile) {
             // Renamed within emoji folder
             const oldFilename = oldPath.split('/').pop() ?? '';
             const oldShortcode = this.filenameToShortcode(oldFilename);
             this.emojiManager.removeCustomEmoji(oldShortcode);
-            await this.addEmojiFromFile(file);
+            await this.addEmojiFromPath(file.path);
         }
     }
 
@@ -264,7 +264,7 @@ export class CustomEmojiWatcher {
             // Reload the emoji with updated data
             const shortcode = this.filenameToShortcode(file.name);
             this.emojiManager.removeCustomEmoji(shortcode);
-            await this.addEmojiFromFile(file);
+            await this.addEmojiFromPath(file.path);
         }
     }
 }
