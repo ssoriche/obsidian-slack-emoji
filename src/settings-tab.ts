@@ -1,7 +1,7 @@
 import { PluginSettingTab, Setting, Notice } from 'obsidian';
 import type { App } from 'obsidian';
 import type SlackEmojiPlugin from './main';
-import type { CustomEmojiMetadata } from './types/emoji';
+import type { CustomEmojiMetadata, CustomEmoji } from './types/emoji';
 
 /**
  * Settings tab for Slack Emoji plugin
@@ -255,6 +255,23 @@ export class SlackEmojiSettingTab extends PluginSettingTab {
 
                 // Write file to vault
                 await this.app.vault.createBinary(filePath, arrayBuffer);
+
+                // Eagerly register in manager — don't wait for vault event (unreliable for hidden folders)
+                if (this.plugin.emojiManager && this.plugin.settings.enableCustomEmoji) {
+                    const mimeType = file.type || 'application/octet-stream';
+                    const blob = new Blob([arrayBuffer], { type: mimeType });
+                    const dataUrl = await this.blobToDataUrl(blob);
+                    const emoji: CustomEmoji = {
+                        type: 'custom',
+                        shortcode,
+                        filename: file.name,
+                        filepath: filePath,
+                        data: dataUrl,
+                        aliases: [],
+                        addedDate: Date.now(),
+                    };
+                    this.plugin.emojiManager.addCustomEmoji(emoji);
+                }
 
                 // Save metadata for gallery display
                 const metadata: CustomEmojiMetadata = {

@@ -5,12 +5,17 @@ import type { EmojiManager } from './emoji-manager';
 /**
  * Watches the custom emoji folder for changes and updates the EmojiManager
  */
+// Vault events do not fire for files in hidden folders like .obsidian/emoji/ when
+// they are added externally. Poll the folder periodically as a reliable fallback.
+const POLL_INTERVAL_MS = 5000;
+
 export class CustomEmojiWatcher {
     private folderPath: string;
     private vault: Vault;
     private emojiManager: EmojiManager;
     private imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp'];
     private eventRefs: EventRef[] = [];
+    private pollTimer: number | null = null;
 
     constructor(vault: Vault, emojiManager: EmojiManager, folderPath: string) {
         this.vault = vault;
@@ -25,53 +30,51 @@ export class CustomEmojiWatcher {
         // Load existing emoji from the folder
         await this.loadExistingEmoji();
 
-        // Register vault event handlers
+        // Register vault event handlers.
+        // Use path-based detection (isEmojiPath) rather than isTFile so that files in
+        // hidden folders like .obsidian/emoji/ are handled even when Obsidian does not
+        // index them as TFile objects.
         this.eventRefs.push(
             this.vault.on('create', (file) => {
-                if (this.isTFile(file)) {
-                    void this.onFileCreated(file);
-                }
+                void this.onFileCreated(file);
             })
         );
         this.eventRefs.push(
             this.vault.on('delete', (file) => {
-                if (this.isTFile(file)) {
-                    this.onFileDeleted(file);
-                }
+                this.onFileDeleted(file);
             })
         );
         this.eventRefs.push(
             this.vault.on('rename', (file, oldPath) => {
-                if (this.isTFile(file)) {
-                    void this.onFileRenamed(file, oldPath);
-                }
+                void this.onFileRenamed(file, oldPath);
             })
         );
         this.eventRefs.push(
             this.vault.on('modify', (file) => {
-                if (this.isTFile(file)) {
-                    void this.onFileModified(file);
-                }
+                void this.onFileModified(file);
             })
         );
+
+        // Poll as a fallback: vault events are not emitted for files in hidden folders
+        // (.obsidian/) when they are added externally by the user.
+        this.pollTimer = window.setInterval(() => {
+            void this.pollForNewEmoji();
+        }, POLL_INTERVAL_MS);
     }
 
     /**
      * Stop watching the folder
      */
     stop(): void {
+        if (this.pollTimer !== null) {
+            window.clearInterval(this.pollTimer);
+            this.pollTimer = null;
+        }
         // Unregister all event handlers
         for (const eventRef of this.eventRefs) {
             this.vault.offref(eventRef);
         }
         this.eventRefs = [];
-    }
-
-    /**
-     * Type guard to check if an abstract file is a TFile
-     */
-    private isTFile(file: TAbstractFile): file is TFile {
-        return 'extension' in file && 'stat' in file;
     }
 
     /**
@@ -104,12 +107,43 @@ export class CustomEmojiWatcher {
     }
 
     /**
-     * Check if a file is an emoji image in the watched folder
+     * Poll the emoji folder for files that appeared since the last scan.
+     * Only reads files whose shortcodes are not yet in the EmojiManager, so repeated
+     * calls after the initial load do very little work (one directory listing).
+     */
+    private async pollForNewEmoji(): Promise<void> {
+        const folderExists = await this.vault.adapter.exists(this.folderPath);
+        if (!folderExists) return;
+
+        const listing = await this.vault.adapter.list(this.folderPath);
+        for (const filePath of listing.files) {
+            if (!this.isEmojiPath(filePath)) continue;
+            const filename = filePath.split('/').pop() ?? '';
+            const shortcode = this.filenameToShortcode(filename);
+            if (!this.emojiManager.findByShortcode(shortcode)) {
+                await this.addEmojiFromPath(filePath);
+            }
+        }
+    }
+
+    /**
+     * Check if a TFile (from vault index) is an emoji image in the watched folder.
+     * Used only by loadExistingEmoji which receives TFile objects from vault.getFiles().
      */
     private isEmojiFile(file: TFile): boolean {
-        if (!file.path.startsWith(this.folderPath)) return false;
+        return this.isEmojiPath(file.path);
+    }
 
-        const ext = file.extension.toLowerCase();
+    /**
+     * Check if a path refers to an emoji image in the watched folder.
+     * Works for any file regardless of vault indexing (e.g. files in .obsidian/).
+     */
+    private isEmojiPath(filePath: string): boolean {
+        const folderPrefix = this.folderPath.endsWith('/')
+            ? this.folderPath
+            : this.folderPath + '/';
+        if (!filePath.startsWith(folderPrefix)) return false;
+        const ext = filePath.split('.').pop()?.toLowerCase() ?? '';
         return this.imageExtensions.includes(`.${ext}`);
     }
 
@@ -216,17 +250,17 @@ export class CustomEmojiWatcher {
     /**
      * Handle file creation
      */
-    private async onFileCreated(file: TFile): Promise<void> {
-        if (this.isEmojiFile(file)) {
-            await this.addEmojiFromFile(file);
+    private async onFileCreated(file: TAbstractFile): Promise<void> {
+        if (this.isEmojiPath(file.path)) {
+            await this.addEmojiFromPath(file.path);
         }
     }
 
     /**
      * Handle file deletion
      */
-    private onFileDeleted(file: TFile): void {
-        if (this.isEmojiFile(file)) {
+    private onFileDeleted(file: TAbstractFile): void {
+        if (this.isEmojiPath(file.path)) {
             const shortcode = this.filenameToShortcode(file.name);
             this.emojiManager.removeCustomEmoji(shortcode);
         }
@@ -235,36 +269,34 @@ export class CustomEmojiWatcher {
     /**
      * Handle file rename
      */
-    private async onFileRenamed(file: TFile, oldPath: string): Promise<void> {
-        const wasEmojiFile = oldPath.startsWith(this.folderPath);
-        const isEmojiFile = this.isEmojiFile(file);
+    private async onFileRenamed(file: TAbstractFile, oldPath: string): Promise<void> {
+        const wasEmoji = this.isEmojiPath(oldPath);
+        const isEmoji = this.isEmojiPath(file.path);
 
-        if (wasEmojiFile && !isEmojiFile) {
+        if (wasEmoji && !isEmoji) {
             // File moved out of emoji folder
             const oldFilename = oldPath.split('/').pop() ?? '';
-            const oldShortcode = this.filenameToShortcode(oldFilename);
-            this.emojiManager.removeCustomEmoji(oldShortcode);
-        } else if (!wasEmojiFile && isEmojiFile) {
+            this.emojiManager.removeCustomEmoji(this.filenameToShortcode(oldFilename));
+        } else if (!wasEmoji && isEmoji) {
             // File moved into emoji folder
-            await this.addEmojiFromFile(file);
-        } else if (wasEmojiFile && isEmojiFile) {
+            await this.addEmojiFromPath(file.path);
+        } else if (wasEmoji && isEmoji) {
             // Renamed within emoji folder
             const oldFilename = oldPath.split('/').pop() ?? '';
-            const oldShortcode = this.filenameToShortcode(oldFilename);
-            this.emojiManager.removeCustomEmoji(oldShortcode);
-            await this.addEmojiFromFile(file);
+            this.emojiManager.removeCustomEmoji(this.filenameToShortcode(oldFilename));
+            await this.addEmojiFromPath(file.path);
         }
     }
 
     /**
      * Handle file modification (reload the emoji)
      */
-    private async onFileModified(file: TFile): Promise<void> {
-        if (this.isEmojiFile(file)) {
+    private async onFileModified(file: TAbstractFile): Promise<void> {
+        if (this.isEmojiPath(file.path)) {
             // Reload the emoji with updated data
             const shortcode = this.filenameToShortcode(file.name);
             this.emojiManager.removeCustomEmoji(shortcode);
-            await this.addEmojiFromFile(file);
+            await this.addEmojiFromPath(file.path);
         }
     }
 }

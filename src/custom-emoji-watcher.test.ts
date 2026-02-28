@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { CustomEmojiWatcher } from './custom-emoji-watcher';
 import { EmojiManager } from './emoji-manager';
 import type { Vault, TFile } from 'obsidian';
@@ -130,6 +130,45 @@ describe('CustomEmojiWatcher', () => {
             const stats = manager.getStats();
             expect(stats.custom).toBe(0);
         });
+
+        it('should not match files in a folder whose name starts with the emoji folder name', async () => {
+            // e.g. .obsidian/emoji-extra/ should NOT match .obsidian/emoji/
+            const adjacentFile = createMockFile('.obsidian/emoji-extra/logo.png', 'logo.png');
+            (mockVault.getFiles as ReturnType<typeof vi.fn>).mockReturnValue([adjacentFile]);
+
+            await watcher.start();
+
+            const stats = manager.getStats();
+            expect(stats.custom).toBe(0);
+        });
+    });
+
+    describe('event-driven emoji loading', () => {
+        it('should register emoji via create event even for non-TFile objects', async () => {
+            await watcher.start();
+
+            // Capture the create callback registered with vault.on
+            const onCalls = (mockVault.on as ReturnType<typeof vi.fn>).mock.calls as [
+                string,
+                (...args: unknown[]) => unknown,
+            ][];
+            const createCallback = onCalls.find(([event]) => event === 'create')?.[1];
+            expect(createCallback).toBeDefined();
+
+            // Simulate a vault create event with a minimal object (no TFile extension/stat).
+            // The callback uses `void` internally so we wait for the async work to settle.
+            const plainFile = {
+                path: '.obsidian/emoji/test-unique-emoji.png',
+                name: 'test-unique-emoji.png',
+            };
+            createCallback?.(plainFile);
+
+            await vi.waitFor(() => {
+                const emoji = manager.findByShortcode('test-unique-emoji');
+                expect(emoji).not.toBeNull();
+                expect(emoji?.type).toBe('custom');
+            });
+        });
     });
 
     describe('shortcode generation', () => {
@@ -171,6 +210,76 @@ describe('CustomEmojiWatcher', () => {
 
             const emoji = manager.findByShortcode('emoji___');
             expect(emoji).toBeDefined();
+        });
+    });
+
+    describe('polling', () => {
+        beforeEach(() => {
+            vi.useFakeTimers();
+        });
+
+        afterEach(() => {
+            watcher.stop();
+            vi.useRealTimers();
+        });
+
+        it('should start a poll timer when started', async () => {
+            const setIntervalSpy = vi.spyOn(window, 'setInterval');
+            await watcher.start();
+            expect(setIntervalSpy).toHaveBeenCalledWith(expect.any(Function), 5000);
+        });
+
+        it('should clear the poll timer when stopped', async () => {
+            const clearIntervalSpy = vi.spyOn(window, 'clearInterval');
+            await watcher.start();
+            watcher.stop();
+            expect(clearIntervalSpy).toHaveBeenCalled();
+        });
+
+        it('should pick up externally-added files when poll runs', async () => {
+            // Start with an empty folder
+            await watcher.start();
+            expect(manager.getStats().custom).toBe(0);
+
+            // Simulate a file appearing in the folder (e.g. copied via Finder)
+            (mockVault.adapter.exists as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+            (mockVault.adapter.list as ReturnType<typeof vi.fn>).mockResolvedValue({
+                files: ['.obsidian/emoji/newly-added.png'],
+                folders: [],
+            });
+
+            // Call the private poll method directly to avoid FileReader/timer interaction
+            await (watcher as unknown as { pollForNewEmoji(): Promise<void> }).pollForNewEmoji();
+
+            const emoji = manager.findByShortcode('newly-added');
+            expect(emoji).toBeDefined();
+            expect(emoji?.type).toBe('custom');
+        });
+
+        it('should not re-read files that are already registered', async () => {
+            // Pre-load an emoji
+            const existingFile = createMockFile('.obsidian/emoji/existing.png', 'existing.png');
+            (mockVault.getFiles as ReturnType<typeof vi.fn>).mockReturnValue([existingFile]);
+            (mockVault.readBinary as ReturnType<typeof vi.fn>).mockResolvedValue(
+                new ArrayBuffer(8)
+            );
+            await watcher.start();
+            expect(manager.getStats().custom).toBe(1);
+
+            // Poll returns the same file
+            (mockVault.adapter.exists as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+            (mockVault.adapter.list as ReturnType<typeof vi.fn>).mockResolvedValue({
+                files: ['.obsidian/emoji/existing.png'],
+                folders: [],
+            });
+            const readBinarySpy = mockVault.adapter.readBinary as ReturnType<typeof vi.fn>;
+            readBinarySpy.mockClear();
+
+            await (watcher as unknown as { pollForNewEmoji(): Promise<void> }).pollForNewEmoji();
+
+            // adapter.readBinary should NOT have been called again for the existing emoji
+            expect(readBinarySpy).not.toHaveBeenCalled();
+            expect(manager.getStats().custom).toBe(1);
         });
     });
 });
