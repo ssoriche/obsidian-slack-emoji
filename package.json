@@ -34,7 +34,7 @@
     "@typescript-eslint/parser": "^8.18.1",
     "@vitest/coverage-v8": "^4.0.15",
     "builtin-modules": "^5.0.0",
-    "esbuild": "^0.27.1",
+    "esbuild": "^0.28.0",
     "eslint": "^9.17.0",
     "eslint-config-prettier": "^10.1.8",
     "happy-dom": "^20.1.0",
